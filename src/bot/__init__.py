@@ -1,1 +1,1 @@
-from src.bot.commands import bot
+from src.bot.commands import bot as bot

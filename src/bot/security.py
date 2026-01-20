@@ -1,6 +1,6 @@
-from functools import wraps
 import logging
 import os
+from functools import wraps
 
 from telebot.types import Message
 

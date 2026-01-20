@@ -1,1 +1,1 @@
-from src.scheduler.config import scheduler
+from src.scheduler.config import scheduler as scheduler

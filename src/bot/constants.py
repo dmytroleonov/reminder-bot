@@ -1,5 +1,5 @@
-from telebot import formatting
 from pytz import timezone
+from telebot import formatting
 
 TIMEZONE = timezone("Europe/Sofia")
 CANCEL_COMMAND = "."

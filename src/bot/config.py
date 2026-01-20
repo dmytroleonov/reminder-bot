@@ -2,6 +2,7 @@ import logging
 import os
 
 import telebot
+
 from src.bot import constants
 
 logger = logging.getLogger(__name__)

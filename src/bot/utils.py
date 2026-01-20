@@ -1,15 +1,13 @@
-from datetime import datetime
 import uuid
-
-from telebot import formatting
-
-from src.bot import constants
-
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from src.scheduler import scheduler
+from datetime import datetime
 
 from apscheduler.job import Job
 from apscheduler.triggers.cron import CronTrigger
+from telebot import formatting
+from telebot.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+
+from src.bot import constants
+from src.scheduler import scheduler
 
 
 def new_uuid() -> str:

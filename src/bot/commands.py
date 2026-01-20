@@ -1,32 +1,30 @@
+from apscheduler.jobstores.base import JobLookupError
+from apscheduler.triggers.cron import CronTrigger
+from telebot import formatting
+from telebot.types import (
+    CallbackQuery,
+    InaccessibleMessage,
+    InlineKeyboardMarkup,
+    Message,
+)
+
 from src.bot import constants
 from src.bot.config import bot
 from src.bot.jobs import send_task_reminder
-from src.bot.utils import (
-    generate_info_message,
-    get_job,
-    new_uuid,
-    generate_list_markup,
-    extract_job_id,
-    is_task_list_callback,
-    is_delete_task_callback,
-    is_info_task_callback,
-    is_edit_task_message_callback,
-)
 from src.bot.security import protected
-
+from src.bot.utils import (
+    extract_job_id,
+    generate_info_message,
+    generate_list_markup,
+    get_job,
+    is_delete_task_callback,
+    is_edit_task_message_callback,
+    is_info_task_callback,
+    is_task_list_callback,
+    new_uuid,
+)
 from src.scheduler import scheduler
 from src.scheduler.utils import get_jobs
-
-from apscheduler.triggers.cron import CronTrigger
-from apscheduler.jobstores.base import JobLookupError
-
-from telebot import formatting
-from telebot.types import (
-    InaccessibleMessage,
-    Message,
-    CallbackQuery,
-    InlineKeyboardMarkup,
-)
 
 
 @bot.message_handler(commands=["start"])

@@ -1,7 +1,7 @@
+import logging
 import sys
 
 # Load environment variables and setup logger before importing the modules that use them
-import logging
 from dotenv import load_dotenv
 
 load_dotenv()
