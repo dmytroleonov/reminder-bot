@@ -113,6 +113,10 @@ def is_edit_task_message_callback(query: CallbackQuery) -> bool:
     return has_prefix(query.data or "", constants.EDIT_TASK_MESSAGE_PREFIX)
 
 
+def is_edit_task_cron_callback(query: CallbackQuery) -> bool:
+    return has_prefix(query.data or "", constants.EDIT_TASK_CRON_PREFIX)
+
+
 def is_info_task_callback(query: CallbackQuery) -> bool:
     return has_prefix(query.data or "", constants.INFO_TASK_PREFIX)
 
@@ -128,8 +132,9 @@ def generate_info_message(job: Job) -> tuple[str, InlineKeyboardMarkup]:
     markup = InlineKeyboardMarkup(row_width=4)
     back_button = inline_keyboard_back_button()
     edit_message_button = inline_keyboard_edit_message_button(job.id)
+    edit_cron_button = inline_keyboard_edit_cron_button(job.id)
     delete_button = inline_keyboard_delete_button(job.id)
-    markup.add(back_button, edit_message_button, delete_button)
+    markup.add(back_button, edit_message_button, edit_cron_button, delete_button)
     text = (
         f"{task_message}\n"
         f"{formatting.hbold('Next run time')}: {next_run_time}\n"

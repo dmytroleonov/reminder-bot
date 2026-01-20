@@ -16,8 +16,10 @@ from src.bot.utils import (
     extract_job_id,
     generate_info_message,
     generate_list_markup,
+    get_crontab,
     get_job,
     is_delete_task_callback,
+    is_edit_task_cron_callback,
     is_edit_task_message_callback,
     is_info_task_callback,
     is_task_list_callback,
@@ -91,7 +93,7 @@ def edit_task_message(query: CallbackQuery) -> None:
     bot.edit_message_text(
         chat_id=query.message.chat.id,
         message_id=query.message.id,
-        text=formatting.hcode(old_task_message),
+        text=f"Old message:\n{formatting.hcode(old_task_message)}",
         parse_mode="HTML",
     )
     bot.register_next_step_handler(
@@ -112,6 +114,64 @@ def edit_task_message_handler(message: Message, *, job_id: str) -> None:
             job_id=job_id,
             kwargs={"chat_id": message.chat.id, "task_message": new_task_message},
         )
+    except JobLookupError:
+        bot.send_message(chat_id=message.chat.id, text=constants.TASK_NOT_FOUND)
+        return
+
+    text, markup = generate_info_message(job)
+    bot.send_message(
+        chat_id=message.chat.id,
+        text=text,
+        reply_markup=markup,
+        parse_mode="HTML",
+    )
+
+
+@bot.callback_query_handler(func=is_edit_task_cron_callback)
+def edit_task_cron(query: CallbackQuery) -> None:
+    if not query.message or isinstance(query.message, InaccessibleMessage):
+        return
+
+    job_id = extract_job_id(query)
+    job = get_job(job_id)
+    if not job:
+        return
+
+    crontab = get_crontab(job.trigger)
+    bot.edit_message_text(
+        chat_id=query.message.chat.id,
+        message_id=query.message.id,
+        text=(f"Old crontab: {formatting.hcode(crontab)}"),
+        parse_mode="HTML",
+    )
+    bot.register_next_step_handler(
+        message=query.message, callback=edit_task_cron_handler, job_id=job_id
+    )
+
+
+def edit_task_cron_handler(message: Message, *, job_id: str) -> None:
+    new_task_crontab = (message.text or "").lower()
+    if new_task_crontab == constants.CANCEL_COMMAND:
+        bot.send_message(
+            chat_id=message.chat.id, text=constants.TASK_EDIT_CRON_CANCELLED
+        )
+        return
+
+    try:
+        trigger = CronTrigger.from_crontab(
+            new_task_crontab, timezone=scheduler.timezone
+        )
+    except ValueError:
+        bot.send_message(chat_id=message.chat.id, text=constants.INVALID_CRON_FORMAT)
+        bot.register_next_step_handler(
+            message=message,
+            callback=edit_task_cron_handler,
+            job_id=job_id,
+        )
+        return
+
+    try:
+        job = scheduler.reschedule_job(job_id=job_id, trigger=trigger)
     except JobLookupError:
         bot.send_message(chat_id=message.chat.id, text=constants.TASK_NOT_FOUND)
         return
