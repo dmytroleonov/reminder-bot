@@ -10,6 +10,9 @@ from src.bot.utils import (
     inline_keyboard_delete_button,
     inline_keyboard_back_button,
     extract_job_id,
+    is_task_list_callback,
+    is_delete_task_callback,
+    is_info_task_callback,
 )
 from src.bot.security import protected
 
@@ -47,7 +50,7 @@ def list_tasks(message: Message) -> None:
     )
 
 
-@bot.callback_query_handler(func=lambda query: query.data == constants.LIST_CALLBACK)
+@bot.callback_query_handler(func=is_task_list_callback)
 def list_tasks_callback(query: CallbackQuery) -> None:
     jobs = get_jobs(query.message.chat.id)
     if not jobs:
@@ -67,9 +70,7 @@ def list_tasks_callback(query: CallbackQuery) -> None:
     )
 
 
-@bot.callback_query_handler(
-    func=lambda query: query.data.startswith(constants.DELETE_TASK_PREFIX)
-)
+@bot.callback_query_handler(func=is_delete_task_callback)
 def delete_task(query: CallbackQuery) -> None:
     job_id = extract_job_id(query)
     try:
@@ -93,9 +94,7 @@ def delete_task(query: CallbackQuery) -> None:
     )
 
 
-@bot.callback_query_handler(
-    func=lambda query: query.data.startswith(constants.INFO_TASK_PREFIX)
-)
+@bot.callback_query_handler(func=is_info_task_callback)
 def task_info(query: CallbackQuery) -> None:
     job_id = extract_job_id(query)
     job = scheduler.get_job(job_id)

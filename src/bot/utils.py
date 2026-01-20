@@ -94,3 +94,23 @@ def get_crontab(trigger: CronTrigger):
     day_of_week = fields[CronTrigger.FIELD_NAMES.index("day_of_week")]
 
     return f"{minute} {hour} {day} {month} {day_of_week}"
+
+
+def has_prefix(data: str, prefix: str) -> bool:
+    return data.startswith(prefix)
+
+
+def is_delete_task_callback(query: CallbackQuery) -> bool:
+    return has_prefix(query.data, constants.DELETE_TASK_PREFIX)
+
+
+def is_edit_task_message_callback(query: CallbackQuery) -> bool:
+    return has_prefix(query.data, constants.EDIT_TASK_MESSAGE_PREFIX)
+
+
+def is_info_task_callback(query: CallbackQuery) -> bool:
+    return has_prefix(query.data, constants.INFO_TASK_PREFIX)
+
+
+def is_task_list_callback(query: CallbackQuery) -> bool:
+    return query.data == constants.LIST_CALLBACK
