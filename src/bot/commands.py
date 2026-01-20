@@ -9,7 +9,7 @@ from src.bot.utils import (
     generate_list_markup,
     inline_keyboard_delete_button,
     inline_keyboard_back_button,
-    extract_job_id
+    extract_job_id,
 )
 from src.bot.security import protected
 
@@ -54,7 +54,7 @@ def list_tasks_callback(query: CallbackQuery) -> None:
         bot.edit_message_text(
             chat_id=query.message.chat.id,
             text=constants.NO_TASKS,
-            reply_markup=InlineKeyboardMarkup()
+            reply_markup=InlineKeyboardMarkup(),
         )
         return
 
@@ -63,7 +63,7 @@ def list_tasks_callback(query: CallbackQuery) -> None:
         chat_id=query.message.chat.id,
         message_id=query.message.id,
         text=constants.YOUR_TASKS,
-        reply_markup=markup
+        reply_markup=markup,
     )
 
 
@@ -80,8 +80,7 @@ def delete_task(query: CallbackQuery) -> None:
         jobs = get_jobs(query.message.chat.id)
         if not jobs:
             bot.delete_message(
-                chat_id=query.message.chat.id,
-                message_id=query.message.id
+                chat_id=query.message.chat.id, message_id=query.message.id
             )
             return
 
@@ -90,7 +89,7 @@ def delete_task(query: CallbackQuery) -> None:
         chat_id=query.message.chat.id,
         message_id=query.message.id,
         text=constants.YOUR_TASKS,
-        reply_markup=markup
+        reply_markup=markup,
     )
 
 
@@ -102,8 +101,7 @@ def task_info(query: CallbackQuery) -> None:
     job = scheduler.get_job(job_id)
     if not job:
         bot.answer_callback_query(
-            callback_query_id=query.id,
-            text=constants.TASK_NOT_FOUND
+            callback_query_id=query.id, text=constants.TASK_NOT_FOUND
         )
         return
 
@@ -123,7 +121,7 @@ def task_info(query: CallbackQuery) -> None:
             f"{formatting.hbold('Crontab')}: {crontab}"
         ),
         reply_markup=markup,
-        parse_mode="HTML"
+        parse_mode="HTML",
     )
 
 
@@ -149,9 +147,7 @@ def choose_time(message: Message, *, task_message: str) -> None:
     try:
         trigger = CronTrigger.from_crontab(crontab, timezone=scheduler.timezone)
     except ValueError:
-        bot.send_message(
-            chat_id=message.chat.id, text=constants.INVALID_CRON_FORMAT
-        )
+        bot.send_message(chat_id=message.chat.id, text=constants.INVALID_CRON_FORMAT)
         bot.register_next_step_handler(
             message=message, callback=choose_time, task_message=task_message
         )
@@ -161,6 +157,6 @@ def choose_time(message: Message, *, task_message: str) -> None:
         func=send_task_reminder,
         trigger=trigger,
         kwargs={"chat_id": message.chat.id, "task_message": task_message},
-        id=new_uuid()
+        id=new_uuid(),
     )
     bot.send_message(chat_id=message.chat.id, text=constants.TASK_CREATED)

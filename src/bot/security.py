@@ -22,10 +22,8 @@ def protected(func):
                 f"User: @{message.from_user.username} {message.from_user.full_name}. "
                 f"Message: {message.text}."
             )
-            bot.send_message(
-                chat_id=message.chat.id,
-                text=COMMAND_NOT_ALLOWED
-            )
+            bot.send_message(chat_id=message.chat.id, text=COMMAND_NOT_ALLOWED)
             return
         func(message)
+
     return wrapper
