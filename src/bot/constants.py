@@ -1,6 +1,8 @@
 from telebot import formatting
+from pytz import timezone
 
-CANCEL_COMMAND = "c"
+TIMEZONE = timezone("Europe/Sofia")
+CANCEL_COMMAND = "."
 CRON_FORMAT = formatting.hcode(
     f"Input cron string according to the format or '{CANCEL_COMMAND}' to cancel\n"
     "┌───────  minute (0–59)\n"

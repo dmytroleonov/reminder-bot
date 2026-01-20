@@ -1,5 +1,4 @@
 from datetime import datetime
-from pytz import timezone
 import uuid
 
 from src.bot import constants
@@ -15,7 +14,7 @@ def new_uuid() -> str:
 
 
 def from_now(time: datetime) -> str:
-    td = time - datetime.now(tz=timezone("Europe/Sofia"))
+    td = time - datetime.now(tz=constants.TIMEZONE)
     seconds = int(td.total_seconds())
     minutes = seconds // 60
     hours = minutes // 60
