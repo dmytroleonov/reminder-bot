@@ -68,7 +68,7 @@ def inline_keyboard_back_button() -> InlineKeyboardButton:
 
 
 def extract_job_id(query: CallbackQuery) -> str:
-    return query.data.split(":")[1]
+    return (query.data or "").split(":")[1]
 
 
 def generate_list_markup(jobs: list[Job]) -> InlineKeyboardMarkup:
@@ -101,15 +101,15 @@ def has_prefix(data: str, prefix: str) -> bool:
 
 
 def is_delete_task_callback(query: CallbackQuery) -> bool:
-    return has_prefix(query.data, constants.DELETE_TASK_PREFIX)
+    return has_prefix(query.data or "", constants.DELETE_TASK_PREFIX)
 
 
 def is_edit_task_message_callback(query: CallbackQuery) -> bool:
-    return has_prefix(query.data, constants.EDIT_TASK_MESSAGE_PREFIX)
+    return has_prefix(query.data or "", constants.EDIT_TASK_MESSAGE_PREFIX)
 
 
 def is_info_task_callback(query: CallbackQuery) -> bool:
-    return has_prefix(query.data, constants.INFO_TASK_PREFIX)
+    return has_prefix(query.data or "", constants.INFO_TASK_PREFIX)
 
 
 def is_task_list_callback(query: CallbackQuery) -> bool:

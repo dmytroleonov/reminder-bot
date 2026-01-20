@@ -17,9 +17,15 @@ def protected(func):
     @wraps(func)
     def wrapper(message: Message):
         if message.chat.id not in ALLOWED_CHAT_IDS:
+            username = ""
+            full_name = ""
+            if message.from_user:
+                username = message.from_user.username
+                full_name = message.from_user.full_name
+
             logger.warning(
                 f"Attempt at unauthorized access in chat [{message.chat.id}]. "
-                f"User: @{message.from_user.username} {message.from_user.full_name}. "
+                f"User: @{username} {full_name}. "
                 f"Message: {message.text}."
             )
             bot.send_message(chat_id=message.chat.id, text=COMMAND_NOT_ALLOWED)

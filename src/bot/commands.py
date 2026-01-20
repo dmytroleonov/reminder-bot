@@ -9,10 +9,12 @@ from src.bot.utils import (
     generate_list_markup,
     inline_keyboard_delete_button,
     inline_keyboard_back_button,
+    inline_keyboard_edit_message_button,
     extract_job_id,
     is_task_list_callback,
     is_delete_task_callback,
     is_info_task_callback,
+    is_edit_task_message_callback,
 )
 from src.bot.security import protected
 
@@ -23,7 +25,12 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.jobstores.base import JobLookupError
 
 from telebot import formatting
-from telebot.types import Message, CallbackQuery, InlineKeyboardMarkup
+from telebot.types import (
+    InaccessibleMessage,
+    Message,
+    CallbackQuery,
+    InlineKeyboardMarkup,
+)
 
 
 @bot.message_handler(commands=["start"])
@@ -33,7 +40,10 @@ def start(message: Message) -> None:
 
 @bot.message_handler(commands=["my_id"])
 def get_user_id(message: Message) -> None:
-    bot.send_message(chat_id=message.chat.id, text=message.from_user.id)
+    if not message.from_user:
+        return
+
+    bot.send_message(chat_id=message.chat.id, text=str(message.from_user.id))
 
 
 @bot.message_handler(commands=["list"])
@@ -52,6 +62,9 @@ def list_tasks(message: Message) -> None:
 
 @bot.callback_query_handler(func=is_task_list_callback)
 def list_tasks_callback(query: CallbackQuery) -> None:
+    if not query.message:
+        return
+
     jobs = get_jobs(query.message.chat.id)
     if not jobs:
         bot.edit_message_text(
@@ -70,8 +83,16 @@ def list_tasks_callback(query: CallbackQuery) -> None:
     )
 
 
+@bot.callback_query_handler(func=is_edit_task_message_callback)
+def edit_task_message(query: CallbackQuery) -> None:
+    return
+
+
 @bot.callback_query_handler(func=is_delete_task_callback)
 def delete_task(query: CallbackQuery) -> None:
+    if not query.message:
+        return
+
     job_id = extract_job_id(query)
     try:
         scheduler.remove_job(job_id)
@@ -80,6 +101,9 @@ def delete_task(query: CallbackQuery) -> None:
     finally:
         jobs = get_jobs(query.message.chat.id)
         if not jobs:
+            if isinstance(query.message, InaccessibleMessage):
+                return
+
             bot.delete_message(
                 chat_id=query.message.chat.id, message_id=query.message.id
             )
@@ -96,6 +120,9 @@ def delete_task(query: CallbackQuery) -> None:
 
 @bot.callback_query_handler(func=is_info_task_callback)
 def task_info(query: CallbackQuery) -> None:
+    if not query.message:
+        return
+
     job_id = extract_job_id(query)
     job = scheduler.get_job(job_id)
     if not job:
@@ -109,8 +136,9 @@ def task_info(query: CallbackQuery) -> None:
     crontab = get_crontab(job.trigger)
     markup = InlineKeyboardMarkup(row_width=2)
     back_button = inline_keyboard_back_button()
+    edit_message_button = inline_keyboard_edit_message_button(job_id)
     delete_button = inline_keyboard_delete_button(job_id)
-    markup.add(back_button, delete_button)
+    markup.add(back_button, edit_message_button, delete_button)
     bot.edit_message_text(
         chat_id=query.message.chat.id,
         message_id=query.message.id,
@@ -136,7 +164,7 @@ def add_task(message: Message) -> None:
 
 
 def choose_time(message: Message, *, task_message: str) -> None:
-    crontab = message.text.lower()
+    crontab = (message.text or "").lower()
     if crontab == constants.CANCEL_COMMAND:
         bot.send_message(
             chat_id=message.chat.id, text=constants.TASK_CREATION_CANCELLED
