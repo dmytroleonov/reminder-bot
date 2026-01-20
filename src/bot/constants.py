@@ -33,6 +33,7 @@ NO_ALLOWED_CHAT_IDS = (
 START_RESPONSE = "Hello! Send me a task you want to be reminded of."
 NO_TASKS = "You have no tasks scheduled."
 TASK_CREATION_CANCELLED = "Task creation has been cancelled."
+TASK_EDIT_MESSAGE_CANCELLED = "Task message update has been cancelled."
 INVALID_CRON_FORMAT = "Invalid cron format. Please try again."
 TASK_CREATED = "Your task has been added!"
 YOUR_TASKS = "Your tasks:"

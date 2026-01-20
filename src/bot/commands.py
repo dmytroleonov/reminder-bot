@@ -1,15 +1,11 @@
-from datetime import datetime
-
 from src.bot import constants
 from src.bot.config import bot
 from src.bot.jobs import send_task_reminder
 from src.bot.utils import (
+    generate_info_message,
+    get_job,
     new_uuid,
-    get_crontab,
     generate_list_markup,
-    inline_keyboard_delete_button,
-    inline_keyboard_back_button,
-    inline_keyboard_edit_message_button,
     extract_job_id,
     is_task_list_callback,
     is_delete_task_callback,
@@ -85,7 +81,50 @@ def list_tasks_callback(query: CallbackQuery) -> None:
 
 @bot.callback_query_handler(func=is_edit_task_message_callback)
 def edit_task_message(query: CallbackQuery) -> None:
-    return
+    if not query.message or isinstance(query.message, InaccessibleMessage):
+        return
+
+    job_id = extract_job_id(query)
+    job = get_job(job_id)
+    if not job:
+        return
+
+    old_task_message = job.kwargs["task_message"]
+    bot.edit_message_text(
+        chat_id=query.message.chat.id,
+        message_id=query.message.id,
+        text=formatting.hcode(old_task_message),
+        parse_mode="HTML",
+    )
+    bot.register_next_step_handler(
+        message=query.message, callback=edit_task_message_handler, job_id=job_id
+    )
+
+
+def edit_task_message_handler(message: Message, *, job_id: str) -> None:
+    new_task_message = (message.text or "").lower()
+    if new_task_message == constants.CANCEL_COMMAND:
+        bot.send_message(
+            chat_id=message.chat.id, text=constants.TASK_EDIT_MESSAGE_CANCELLED
+        )
+        return
+
+    try:
+        job = scheduler.modify_job(
+            job_id=job_id,
+            kwargs={"chat_id": message.chat.id, "task_message": new_task_message},
+        )
+    except JobLookupError:
+        bot.send_message(chat_id=message.chat.id, text=constants.TASK_NOT_FOUND)
+        return
+
+    text, markup = generate_info_message(job)
+    bot.send_message(
+        chat_id=message.chat.id,
+        text=text,
+        reply_markup=markup,
+        parse_mode="HTML",
+    )
 
 
 @bot.callback_query_handler(func=is_delete_task_callback)
@@ -124,29 +163,18 @@ def task_info(query: CallbackQuery) -> None:
         return
 
     job_id = extract_job_id(query)
-    job = scheduler.get_job(job_id)
+    job = get_job(job_id)
     if not job:
         bot.answer_callback_query(
             callback_query_id=query.id, text=constants.TASK_NOT_FOUND
         )
         return
 
-    task_message = job.kwargs["task_message"]
-    next_run_time = datetime.strftime(job.next_run_time, "%Y-%m-%d %H:%M")
-    crontab = get_crontab(job.trigger)
-    markup = InlineKeyboardMarkup(row_width=2)
-    back_button = inline_keyboard_back_button()
-    edit_message_button = inline_keyboard_edit_message_button(job_id)
-    delete_button = inline_keyboard_delete_button(job_id)
-    markup.add(back_button, edit_message_button, delete_button)
+    text, markup = generate_info_message(job)
     bot.edit_message_text(
         chat_id=query.message.chat.id,
         message_id=query.message.id,
-        text=(
-            f"{task_message}\n"
-            f"{formatting.hbold('Next run time')}: {next_run_time}\n"
-            f"{formatting.hbold('Crontab')}: {crontab}"
-        ),
+        text=text,
         reply_markup=markup,
         parse_mode="HTML",
     )

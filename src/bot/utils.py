@@ -1,9 +1,12 @@
 from datetime import datetime
 import uuid
 
+from telebot import formatting
+
 from src.bot import constants
 
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from src.scheduler import scheduler
 
 from apscheduler.job import Job
 from apscheduler.triggers.cron import CronTrigger
@@ -11,6 +14,10 @@ from apscheduler.triggers.cron import CronTrigger
 
 def new_uuid() -> str:
     return str(uuid.uuid4())
+
+
+def get_job(job_id: str) -> Job | None:
+    return scheduler.get_job(job_id)
 
 
 def from_now(time: datetime) -> str:
@@ -114,3 +121,21 @@ def is_info_task_callback(query: CallbackQuery) -> bool:
 
 def is_task_list_callback(query: CallbackQuery) -> bool:
     return query.data == constants.LIST_CALLBACK
+
+
+def generate_info_message(job: Job) -> tuple[str, InlineKeyboardMarkup]:
+    task_message = job.kwargs["task_message"]
+    next_run_time = datetime.strftime(job.next_run_time, "%Y-%m-%d %H:%M")
+    crontab = get_crontab(job.trigger)
+    markup = InlineKeyboardMarkup(row_width=4)
+    back_button = inline_keyboard_back_button()
+    edit_message_button = inline_keyboard_edit_message_button(job.id)
+    delete_button = inline_keyboard_delete_button(job.id)
+    markup.add(back_button, edit_message_button, delete_button)
+    text = (
+        f"{task_message}\n"
+        f"{formatting.hbold('Next run time')}: {next_run_time}\n"
+        f"{formatting.hbold('Crontab')}: {crontab}"
+    )
+
+    return (text, markup)
