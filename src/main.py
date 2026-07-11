@@ -20,8 +20,8 @@ from src.scheduler import scheduler  # noqa: E402
 
 def main():
     scheduler.start()
-    logger.info("Starting the bot...")
-    bot.infinity_polling()
+    logger.info('Starting the bot...')
+    bot.infinity_polling(interval=0.5)
 
 
 if __name__ == "__main__":
